@@ -193,10 +193,19 @@ void Freenect2Camera::captureLoop()
 	libfreenect2::Freenect2Device *dev = 0;
 	libfreenect2::PacketPipeline *pipeline = 0;
 
+
+
+
+	libfreenect2::Freenect2Device::Config configNearMode;
+	configNearMode.MinDepth = 0.005f;
+	configNearMode.MaxDepth = 4.5f;
+
+
 	//pipeline = new libfreenect2::CpuPacketPipeline();
 	//pipeline = new libfreenect2::OpenGLPacketPipeline();
 	pipeline = new libfreenect2::OpenCLPacketPipeline(0);
 	//pipeline = new libfreenect2::CudaPacketPipeline(0);
+
 
 	if (freenect2.enumerateDevices() == 0)
 	{
@@ -220,21 +229,34 @@ void Freenect2Camera::captureLoop()
 	dev->setColorFrameListener(&listener);
 	dev->setIrAndDepthFrameListener(&listener);
 
+	dev->setConfiguration(configNearMode, 0.1322581f, 1.0f, 0.1612903f);
+
 	if (!dev->start())
 		return;
 
 
 
-	libfreenect2::Freenect2Device::IrCameraParams irCamParams = dev->getIrCameraParams();
-	irCamParams.fx = 3.607533433165361e+02;
-	irCamParams.fy = 3.613185655370914e+02;
-	irCamParams.cx = 2.582765413544986e+02;
-	irCamParams.cy = 2.030852224480832e+02;
-	irCamParams.k1 = 0.101243877185196;
-	irCamParams.k2 = -0.279311690736655;
-	irCamParams.k3 = 0.073644459910773;
-	irCamParams.p1 = -0.003461526071644;
-	irCamParams.p2 = -9.965536968853084e-04;
+	libfreenect2::Freenect2Device::IrCameraParams irCamParams;// = dev->getIrCameraParams();
+	//irCamParams.fx = 3.607533433165361e+02;
+	//irCamParams.fy = 3.613185655370914e+02;
+	//irCamParams.cx = 2.582765413544986e+02;
+	//irCamParams.cy = 2.030852224480832e+02;
+	//irCamParams.k1 = 0.101243877185196;
+	//irCamParams.k2 = -0.279311690736655;
+	//irCamParams.k3 = 0.073644459910773;
+	//irCamParams.p1 = -0.003461526071644;
+	//irCamParams.p2 = -9.965536968853084e-04;
+
+	irCamParams.fx = m_depthCamPams.fx;
+	irCamParams.fy = m_depthCamPams.fy;
+	irCamParams.cx = m_depthCamPams.ppx;
+	irCamParams.cy = m_depthCamPams.ppy;
+	irCamParams.k1 = m_depthCamPams.k1;
+	irCamParams.k2 = m_depthCamPams.k2;
+	irCamParams.k3 = m_depthCamPams.k3;
+	irCamParams.p1 = m_depthCamPams.p1;
+	irCamParams.p2 = m_depthCamPams.p2;
+
 
 	//irCamParams.fx = 1.532509370e+003;
 	//irCamParams.fy = 1.53012236359e+003;
@@ -249,16 +271,7 @@ void Freenect2Camera::captureLoop()
 
 	dev->setIrCameraParams(irCamParams);
 
-	m_depth_fx = dev->getIrCameraParams().fx;
-	m_depth_fy = dev->getIrCameraParams().fy;
-	m_depth_ppx = dev->getIrCameraParams().cx;
-	m_depth_ppy = dev->getIrCameraParams().cy;
 
-	m_depth_k1;
-	m_depth_k2;
-	m_depth_k3;
-	m_depth_p1;
-	m_depth_p2;
 
 	m_colorCamPams = dev->getColorCameraParams();
 

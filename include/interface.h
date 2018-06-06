@@ -2,12 +2,28 @@
 #include <libfreenect2/libfreenect2.hpp>
 #include <libfreenect2/frame_listener_impl.h>
 #include <libfreenect2/registration.h>
+#include <libfreenect2/packet_pipeline.h>
 #include <iostream>
 
 #include <thread>
 #include <mutex>
 #include <vector>
 //#include "opencv2/opencv.hpp"
+
+struct camPams
+{
+	float fx;
+	float fy;
+	float ppx;
+	float ppy;
+
+	float k1;
+	float k2;
+	float p1;
+	float p2;
+	float k3;
+};
+
 
 class Freenect2Camera
 {
@@ -26,10 +42,6 @@ public:
 		, m_rawBigDepth()
 		, m_frame_width(0)
 		, m_frame_height(0)
-		, m_depth_fx(0)
-		, m_depth_fy(0)
-		, m_depth_ppx(0)
-		, m_depth_ppy(0)
 		, m_frames_ready(false)
 		, m_thread(nullptr)
 		, m_mtx()
@@ -76,25 +88,28 @@ public:
 		return m_frame_height;
 	}
 
-	float fx()
+	camPams getDepthCamPams()
 	{
-		return m_depth_fx;
+		return m_depthCamPams;
 	}
 
-	float fy()
+	void setDepthCamPams(camPams dcp)
 	{
-		return m_depth_fy;
+		m_depthCamPams = dcp;
 	}
 
-	float ppx()
+	/*camPams getColorCamPams()
 	{
-		return m_depth_ppx;
-	}
+		return m_colorCamPams;
+	}*/
 
-	float ppy()
+	/*void setColorCamPams(camPams ccp)
 	{
-		return m_depth_ppy;
+		m_colorCamPams = ccp;
 	}
+*/
+
+
 
 
 	float fx_col()
@@ -132,21 +147,24 @@ private:
 	int m_frame_width;
 	int m_frame_height;
 
-	float m_depth_fx;
+	camPams m_depthCamPams;
+	//camPams m_colorCamPams;
+
+	/*float m_depth_fx;
 	float m_depth_fy;
 	float m_depth_ppx;
-	float m_depth_ppy;
+	float m_depth_ppy;*/
 
 	float m_color_fx;
 	float m_color_fy;
 	float m_color_ppx;
 	float m_color_ppy;
 
-	float m_depth_k1;
-	float m_depth_k2;
-	float m_depth_k3;
-	float m_depth_p1;
-	float m_depth_p2;
+	//float m_depth_k1;
+	//float m_depth_k2;
+	//float m_depth_k3;
+	//float m_depth_p1;
+	//float m_depth_p2;
 
 	Status m_status;
 	bool m_frames_ready;

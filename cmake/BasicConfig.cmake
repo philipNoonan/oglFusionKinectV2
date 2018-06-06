@@ -35,7 +35,7 @@ endif()
 #------------------------------------------------------------------------------
 # This file is required to improve CMake's location capabilities.
 #
-include(FindConfig)
+#include(FindConfig)
 
 #------------------------------------------------------------------------------
 # This file is required to improve the integration of 3rdparty libraries.

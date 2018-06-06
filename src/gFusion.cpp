@@ -1,3 +1,6 @@
+
+
+
 #include "gFusion.h"
 
 gFusion::~gFusion()
@@ -1136,76 +1139,76 @@ void gFusion::vertexToNormal()
 	}
 }
 
-//void gFusion::showNormals()
-//{
-//	cv::Mat lvl0 = cv::Mat(424, 512, CV_32FC4);
-//	cv::Mat lvl1 = cv::Mat(424 / 2, 512 / 2, CV_32FC4);
-//	cv::Mat lvl2 = cv::Mat(424 / 4, 512 / 4, CV_32FC4);
-//
-//	glActiveTexture(GL_TEXTURE0);
-//	glBindTexture(GL_TEXTURE_2D, m_textureNormal);
-//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, lvl0.data);
-//	glGetTexImage(GL_TEXTURE_2D, 1, GL_RGBA, GL_FLOAT, lvl1.data);
-//	glGetTexImage(GL_TEXTURE_2D, 2, GL_RGBA, GL_FLOAT, lvl2.data);
-//	glBindTexture(GL_TEXTURE_2D, 0);
-//	glActiveTexture(0);
-//
-//	cv::imshow("lvl0!", lvl0);
-//	cv::imshow("lvl1!", lvl1);
-//	cv::imshow("lvl2!", lvl2);
-//
-//
-//
-//	lvl0 = cv::Mat(424, 512, CV_32FC4);
-//	lvl1 = cv::Mat(424 / 2, 512 / 2, CV_32FC4);
-//	lvl2 = cv::Mat(424 / 4, 512 / 4, CV_32FC4);
-//
-//	glActiveTexture(GL_TEXTURE0);
-//	glBindTexture(GL_TEXTURE_2D, m_textureVertex);
-//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, lvl0.data);
-//	glGetTexImage(GL_TEXTURE_2D, 1, GL_RGBA, GL_FLOAT, lvl1.data);
-//	glGetTexImage(GL_TEXTURE_2D, 2, GL_RGBA, GL_FLOAT, lvl2.data);
-//	glBindTexture(GL_TEXTURE_2D, 0);
-//	glActiveTexture(0);
-//
-//	cv::Mat image0[4];
-//	cv::split(lvl0, image0);
-//	cv::Mat image1[4];
-//	cv::split(lvl1, image1);
-//	cv::Mat image2[4];
-//	cv::split(lvl2, image2);
-//
-//	cv::imshow("lvl0", image0[2]);
-//	cv::imshow("lvl1", image1[2]);
-//	cv::imshow("lvl2", image2[2]);
-//
-//}
-//
-//void gFusion::showRaycast()
-//{
-//	cv::Mat points = cv::Mat(424, 512, CV_32FC4);
-//	cv::Mat norms = cv::Mat(424, 512, CV_32FC4);
-//
-//	glActiveTexture(GL_TEXTURE0);
-//	glBindTexture(GL_TEXTURE_2D, m_textureReferenceVertex);
-//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, points.data);
-//	glBindTexture(GL_TEXTURE_2D, 0);
-//	glActiveTexture(0);
-//
-//	cv::Mat pointsDepth[4];
-//	cv::split(points, pointsDepth);
-//	cv::imshow("points", pointsDepth[2]);
-//
-//	glActiveTexture(GL_TEXTURE0);
-//	glBindTexture(GL_TEXTURE_2D, m_textureReferenceNormal);
-//	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, norms.data);
-//	glBindTexture(GL_TEXTURE_2D, 0);
-//	glActiveTexture(0);
-//
-//	cv::imshow("normals", norms);
-//
-//
-//}
+void gFusion::showNormals()
+{
+	cv::Mat lvl0 = cv::Mat(424, 512, CV_32FC4);
+	cv::Mat lvl1 = cv::Mat(424 / 2, 512 / 2, CV_32FC4);
+	cv::Mat lvl2 = cv::Mat(424 / 4, 512 / 4, CV_32FC4);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_textureNormal);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, lvl0.data);
+	glGetTexImage(GL_TEXTURE_2D, 1, GL_RGBA, GL_FLOAT, lvl1.data);
+	glGetTexImage(GL_TEXTURE_2D, 2, GL_RGBA, GL_FLOAT, lvl2.data);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(0);
+
+	cv::imshow("lvl0!", lvl0);
+	cv::imshow("lvl1!", lvl1);
+	cv::imshow("lvl2!", lvl2);
+
+
+
+	lvl0 = cv::Mat(424, 512, CV_32FC4);
+	lvl1 = cv::Mat(424 / 2, 512 / 2, CV_32FC4);
+	lvl2 = cv::Mat(424 / 4, 512 / 4, CV_32FC4);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_textureVertex);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, lvl0.data);
+	glGetTexImage(GL_TEXTURE_2D, 1, GL_RGBA, GL_FLOAT, lvl1.data);
+	glGetTexImage(GL_TEXTURE_2D, 2, GL_RGBA, GL_FLOAT, lvl2.data);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(0);
+
+	cv::Mat image0[4];
+	cv::split(lvl0, image0);
+	cv::Mat image1[4];
+	cv::split(lvl1, image1);
+	cv::Mat image2[4];
+	cv::split(lvl2, image2);
+
+	cv::imshow("lvl0", image0[2]);
+	cv::imshow("lvl1", image1[2]);
+	cv::imshow("lvl2", image2[2]);
+
+}
+
+void gFusion::showRaycast()
+{
+	cv::Mat points = cv::Mat(424, 512, CV_32FC4);
+	cv::Mat norms = cv::Mat(424, 512, CV_32FC4);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_textureReferenceVertex);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, points.data);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(0);
+
+	cv::Mat pointsDepth[4];
+	cv::split(points, pointsDepth);
+	cv::imshow("points", pointsDepth[2]);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_textureReferenceNormal);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, norms.data);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(0);
+
+	cv::imshow("normals", norms);
+
+
+}
 //
 //void gFusion::showDifference()
 //{

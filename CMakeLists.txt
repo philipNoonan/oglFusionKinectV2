@@ -1,8 +1,17 @@
 cmake_minimum_required(VERSION 3.9)
+# Toolchain file needs to be set before project() 
+set(CMAKE_TOOLCHAIN_FILE "C:/Code/vcpkg/scripts/buildsystems/vcpkg.cmake")
+
+project(oglFusionNM)
 
 
-project(oglFusion)
+if (WIN32)
 
+if ("${CMAKE_VERSION}" VERSION_GREATER 3.6.3)
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+endif ("${CMAKE_VERSION}" VERSION_GREATER 3.6.3)
+  
+endif()
 
 # Save the command line compile commands in the build output
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
@@ -22,28 +31,23 @@ endif()
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include(BasicConfig)
 
-#include(${THIRD_PARTY_DIR}/dlib-18.18/dlib/cmake)
-#freeglut
-set(THIRD_PARTY_DIR $ENV{THIRD_PARTY_DIR})
-set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${THIRD_PARTY_DIR}/freeglut/include)
-set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} ${THIRD_PARTY_DIR}/freeglut/lib)
-#glew
-set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${THIRD_PARTY_DIR}/glew/include)
-set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} ${THIRD_PARTY_DIR}/glew/lib)
-#PCL
 
-#find_package(OpenCV REQUIRED)
+# OpenCV
+set(OpenCV_DIR "${THIRD_PARTY_DIR}/opencv")
+
+find_package(freenect2 REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(GLFW REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(Freenect2 REQUIRED)
-find_package(Aruco REQUIRED)
-find_package(GLM REQUIRED)
-find_package(Eigen3 REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(glm REQUIRED)
+find_package(imgui REQUIRED)
+find_package(eigen3 REQUIRED)
+find_package(tinyxml2 REQUIRED)
+
+find_package(OpenCV REQUIRED)
 
 add_definitions(-DEIGEN_USE_NEW_STDVECTOR
                 -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET)#find_package(REALSENSE2 REQUIRED)
-
 
 
 file(GLOB_RECURSE SRC "src/*")
@@ -59,69 +63,86 @@ list(APPEND SRC ${HDR})
 list(APPEND SRC ${RES})
 
 
-#imgui include - not currently on the git 
-file(TO_CMAKE_PATH $ENV{IMGUI_DIR} IMGUI_DIR) # this is to make windows path slashes happy, otherwise a invalid escape error is made
-file(GLOB imGUI ${IMGUI_DIR}/*.cpp)
-list(APPEND SRC ${imGUI})
+### COPY SHADER FILES TO BUILD AND BINARY LOCATIONS IF THEY HAVE BEEN CHANGED ###
+add_custom_target(
+  shadersNM ALL
+  DEPENDS ${SHD}
+  COMMENT "Copying shader files"
+  VERBATIM
+)
+foreach(ShaderFile ${SHD})
+get_filename_component(ShaderName ${ShaderFile} NAME)
+	add_custom_command(
+		TARGET shadersNM
+		COMMAND ${CMAKE_COMMAND}
+		ARGS -E copy_if_different
+			${ShaderFile}
+			${PROJECT_BINARY_DIR}/bin/$(Configuration)/shaders/${ShaderName}
+	)
+		add_custom_command(
+		TARGET shadersNM
+		COMMAND ${CMAKE_COMMAND}
+		ARGS -E copy_if_different
+			${ShaderFile}
+			${PROJECT_BINARY_DIR}/shaders/${ShaderName}
+	)
+endforeach()
 
+### COPY RESOURCES FILES TO BUILD AND BINARY LOCATIONS IF THEY HAVE BEEN CHANGED ###
+add_custom_target(
+  resourcesNM ALL
+  DEPENDS ${RES}
+  COMMENT "Copying resources files"
+  VERBATIM
+)
+foreach(ResourceFile ${RES})
+get_filename_component(ResourceName ${ResourceFile} NAME)
+	add_custom_command(
+		TARGET resourcesNM
+		COMMAND ${CMAKE_COMMAND}
+		ARGS -E copy_if_different
+			${ResourceFile}
+			${PROJECT_BINARY_DIR}/bin/$(Configuration)/resources/${ResourceName}
+	)
+		add_custom_command(
+		TARGET resourcesNM
+		COMMAND ${CMAKE_COMMAND}
+		ARGS -E copy_if_different
+			${ResourceFile}
+			${PROJECT_BINARY_DIR}/resources/${ResourceName}
+	)
+endforeach()
 
 
 add_executable(${PROJECT_NAME} ${SRC})
-
+add_dependencies(${PROJECT_NAME} shadersNM resourcesNM)
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_PDB_NAME_DEBUG "${PROJECT_NAME}${CMAKE_DEBUG_POSTFIX}")
 
 #set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
 #ADD_DEFINITIONS(-DUNICODE)
 #ADD_DEFINITIONS(-D_UNICODE)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${IMGUI_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC "include")
 target_include_directories(${PROJECT_NAME} PUBLIC "graphics")
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIR})
-target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIR})
-#target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_INCLUDE_DIR})
-target_include_directories(${PROJECT_NAME} PUBLIC ${FREENECT2_INCLUDE_PATH})
-target_include_directories(${PROJECT_NAME} PUBLIC ${ARUCO_INCLUDE_DIR})
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIR})
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLUT_INCLUDE_DIR})
-target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
-#target_include_directories(${PROJECT_NAME} PUBLIC ${REALSENSE2_INCLUDE_PATHS})
-
-#target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_gl_LIBRARY})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${GLFW_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${FREENECT2_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${GLEW_LIBRARY})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${ARUCO_LIBRARIES})
-#target_link_libraries(${PROJECT_NAME} PUBLIC ${REALSENSE2_LIBRARIES})
-
-#target_link_libraries(${PROJECT_NAME} PUBLIC ${PCL_COMMON_LIBRARIES}) #this includes a lot of vtk libs
-
-add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_SOURCE_DIR}/shaders/
-                ${PROJECT_BINARY_DIR}/bin/$(Configuration)/shaders/)
-				
-add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_SOURCE_DIR}/shaders/
-                ${PROJECT_BINARY_DIR}/shaders/)
-				
-add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_SOURCE_DIR}/resources/
-                ${PROJECT_BINARY_DIR}/bin/$(Configuration)/resources/)
-				
-add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_SOURCE_DIR}/resources/
-                ${PROJECT_BINARY_DIR}/resources/)
+target_include_directories(${PROJECT_NAME} PUBLIC ${freenect2_INCLUDE_DIRS})
 
 
+if (WIN32)
+	target_link_libraries(${PROJECT_NAME} debug ${freenect2_DEBUG_LIBRARY})
+	target_link_libraries(${PROJECT_NAME} optimized ${freenect2_LIBRARY})
+else()
+	target_link_libraries(${PROJECT_NAME} ${FREENECT2_LIBRARIES})
+endif()
+#target_link_libraries(${PROJECT_NAME} ${freenect2_LIBRARIES})
+
+target_link_libraries(${PROJECT_NAME} ${OPENGL_gl_LIBRARY})
+target_link_libraries(${PROJECT_NAME} GLEW::GLEW)
+target_link_libraries(${PROJECT_NAME} glfw)
+target_link_libraries(${PROJECT_NAME} glm)
+target_link_libraries(${PROJECT_NAME} imgui::imgui)
+target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
+target_link_libraries(${PROJECT_NAME} tinyxml2)

@@ -1,41 +1,6 @@
 #include "kinect.h"
 
 #define USEINFRARED
-//#define USEWEBCAM
-//#define USEIMAGES
-//#define USEVIDEO
-//#define USETESTIMAGE
-
-//
-//#include "opencv2/core/utility.hpp"
-//#include "opencv2/opencv.hpp"
-//#include "opencv2/imgproc/imgproc.hpp"
-//#include "opencv2/highgui/highgui.hpp"
-
-// To split this up we will have just rendering calls in 
-// kRender - rendering calls
-// gFusion - raycasting, integrating, set, reset, getPose, setPose, depth to vert, vert to normals, 
-
-// memory bank
-// volume - 3D Texture short2 RG16I, 256x256x256
-// depth - 2D Texture float RED, 512x424 mipmapped
-// color - 2D Texture unsigned byte RGBA, 1920x1080
-// vertex - 2D Texture float RGBA32F, vector of textures mipmapped
-// normal - 2D Texture float RGBA32F, vector of textures mipmapped
-
-
-
-// Doesnt work :( cant seem to easily get laptop to use integrated GPU from openGL context. 
-//#include <windows.h>
-//extern "C" {
-//	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000000;
-//}
-
-
-
-
-
-
 
 static void error_callback(int error, const char* description)
 {
@@ -78,9 +43,6 @@ void gFusionInit()
 	gfusion.initVolume();
 	gfusion.allocateBuffers();
 
-
-
-
 }
 
 void mCubeInit()
@@ -96,6 +58,69 @@ void mCubeInit()
 
 }
 
+int loadCalibration(std::string calibFile)
+{
+	//tinyxml2::XMLError eResult = calibrationXML.LoadFile("./Resources/calib.xml");
+	//tinyxml2::XMLNode * pRoot = calibrationXML.FirstChild();
+
+	//if (pRoot == nullptr) return tinyxml2::XML_ERROR_FILE_READ_ERROR;
+
+	cv::FileStorage fs(calibFile, cv::FileStorage::READ);
+
+	cv::Mat_ <float> cMat(3, 3);
+	cv::Mat_ <float> dVec(5, 1);
+	fs["camera_matrix"] >> cMat;      
+	fs["distortion_coefficients"] >> dVec;// 
+	fs.release();
+
+	std::cout << cMat << std::endl;
+	std::cout << dVec << std::endl;
+
+	camPams newCamPams;
+	newCamPams.fx = cMat(0, 0);
+	newCamPams.fy = cMat(1, 1);
+	newCamPams.ppx = cMat(0, 2);
+	newCamPams.ppy = cMat(1, 2);
+
+	newCamPams.k1 = dVec(0);
+	newCamPams.k2 = dVec(1);
+	newCamPams.p1 = dVec(2);
+	newCamPams.p2 = dVec(3);
+	newCamPams.k3 = dVec(4);
+
+	kcamera.setDepthCamPams(newCamPams);
+
+
+	//std::cout << cMat << std::endl;
+	//if (!markerDict.fromFile(dictFile))
+	//{
+	//	cerr << "cannot open dictionary file " << dictFile << endl;
+	//	return false;
+	//}
+	//if (markerDict.empty())
+	//{
+	//	cerr << "marker dictionary file is empty" << endl;
+	//	return false;
+	//}
+
+	return 1;
+}
+
+void startKinect()
+{
+	kcamera.start();
+
+	camPams currentCamPams = kcamera.getDepthCamPams();
+	krender.setCameraParams(glm::vec4(currentCamPams.fx, currentCamPams.fx, currentCamPams.ppx, currentCamPams.ppy), glm::vec4(kcamera.fx_col(), kcamera.fx_col(), kcamera.ppx_col(), kcamera.ppy_col())); // FIX ME
+	gfusion.setCameraParams(glm::vec4(currentCamPams.fx, currentCamPams.fx, currentCamPams.ppx, currentCamPams.ppy), glm::vec4(kcamera.fx_col(), kcamera.fx_col(), kcamera.ppx_col(), kcamera.ppy_col())); // FIX ME
+
+
+
+	while (!kcamera.ready())
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	}
+}
 
 
 int main(int, char**)
@@ -136,43 +161,14 @@ int main(int, char**)
 #endif
 	gdisoptflow.allocateBuffers();
 
-	//std::cout << "flow set" << std::endl;
-
 	kRenderInit();
-	//std::cout << "render init" << std::endl;
-
-
-
-	//gfusion.queryWorkgroupSizes();
-
-
-
-
-	//cv::Ptr<cv::DenseOpticalFlow> algorithm = cv::optflow::createOptFlow_DIS(cv::optflow::DISOpticalFlow::PRESET_MEDIUM);
-	//
-	//cv::Mat prevgray, gray, graySmall, rgb, frame;
-	//cv::Mat I0x = cv::Mat(1080, 1920, CV_16SC1);
-	//cv::Mat I0y = cv::Mat(1080, 1920, CV_16SC1);
-	//cv::Mat flow, flow_uv[2];
-	//cv::Mat mag, ang;
-	//cv::Mat hsv_split[3], hsv;
-	//char ret;
-
-	//cv::namedWindow("flow", 1);
-	//cv::namedWindow("orig", 1);
 
 	const int samples = 50;
 	float time[samples];
 	int index = 0;
 
-	kcamera.start();
+	
 
-	while (!kcamera.ready())
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	}
-
-	//std::cout << "camera ready" << std::endl;
 
 	bool newFrame = false;
 	bool show_slider_graph = true;
@@ -180,7 +176,7 @@ int main(int, char**)
 	float midDepth1 = 0.0f;
 	float midDepth2 = 0.0f;
 	float midDepth3 = 0.0f;
-	//OCVStuff.setupAruco();
+	
 
 	//cv::Mat irCamPams = cv::Mat::eye(3, 3, CV_32F);
 	//cv::Mat irCamDist = cv::Mat(5, 1, CV_32F);
@@ -220,9 +216,7 @@ int main(int, char**)
 
 		//krender.requestShaderInfo();
 
-		krender.setCameraParams(glm::vec4(kcamera.fx(), kcamera.fx(), kcamera.ppx(), kcamera.ppy()), glm::vec4(kcamera.fx_col(), kcamera.fx_col(), kcamera.ppx_col(), kcamera.ppy_col())); // FIX ME
-		gfusion.setCameraParams(glm::vec4(kcamera.fx(), kcamera.fx(), kcamera.ppx(), kcamera.ppy()), glm::vec4(kcamera.fx_col(), kcamera.fx_col(), kcamera.ppx_col(), kcamera.ppy_col())); // FIX ME
-
+	
 		if (kcamera.ready())
 		{
 			kcamera.frames(colorArray, depthArray, infraredArray, bigDepthArray, colorDepthMap);
@@ -286,6 +280,8 @@ int main(int, char**)
 			//std::cout << "projected to 3D " << std::endl;
 			gfusion.vertexToNormal();
 			//std::cout << "normailsed " << std::endl;
+			//gfusion.showNormals();
+			//gfusion.showRaycast();
 
 			bool tracked;
 
@@ -463,6 +459,22 @@ int main(int, char**)
 				//ImGui::PushItemWidth(-krender.guiPadding().first);
 				//ImGui::SetWindowPos(ImVec2(display_w - (display_w / 4) - krender.guiPadding().first, ((krender.guiPadding().second) + (0))));
 				ImGui::Text("Help menu - press 'H' to hide");
+
+				ImGui::Separator();
+				ImGui::Text("Kinect Options");
+				if (ImGui::Button("Open Calib"))
+				{
+					// open dialogue to set kinect calibration yml, xml
+					std::string calFile("resources/infrared.yml");
+					loadCalibration(calFile);
+					defaultCalibration = false;
+				}
+				if (ImGui::Button("Start Kinect"))
+				{
+					if (defaultCalibration)
+						std::cout << "Default Calibration Used" << std::endl;
+					startKinect();
+				}
 
 				ImGui::Separator();
 				ImGui::Text("Fusion Options");

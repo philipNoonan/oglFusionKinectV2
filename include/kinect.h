@@ -17,6 +17,8 @@
 #include "gFusion.h"
 #include "gDisOptFlow.h"
 
+#include <tinyxml2.h>
+
 
 //#include "opencv2/core/utility.hpp"
 //#include "opencv2/highgui.hpp"
@@ -36,6 +38,7 @@ gFusionConfig gconfig;
 mCubeConfig mcconfig;
 gDisOptFlow gdisoptflow;
 
+tinyxml2::XMLDocument calibrationXML;
 
 //cv::Mat flow;// = cv::Mat(424, 512, CV_8UC3);
 //cv::Mat tFlow;
@@ -44,6 +47,8 @@ gDisOptFlow gdisoptflow;
 
 /////////////////////////
 // KINECT STUFF
+
+bool defaultCalibration = true;
 
 const int screenWidth = 1920;
 const int screenHeight = 1080;
@@ -139,9 +144,10 @@ glm::vec3 initOffset(int pixX, int pixY)
 {
 	float z = depthArray[pixY * depthWidth + pixX] / 1000.0f;
 	//kcamera.fx(), kcamera.fx(), kcamera.ppx(), kcamera.ppy()
+	camPams currentCamPams = kcamera.getDepthCamPams();
 
-	float x = (pixX - kcamera.ppx()) * (1.0f / kcamera.fx()) * z;
-	float y = (pixY - kcamera.ppy()) * (1.0f / kcamera.fx()) * z;
+	float x = (pixX - currentCamPams.ppx) * (1.0f / currentCamPams.fx) * z;
+	float y = (pixY - currentCamPams.ppy) * (1.0f / currentCamPams.fx) * z;
 
 	std::cout << "x " << x << " y " << y << " z " << z << std::endl;
 
