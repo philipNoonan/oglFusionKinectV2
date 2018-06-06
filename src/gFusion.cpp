@@ -305,7 +305,7 @@ void gFusion::allocateBuffers()
 	glBufferData(GL_SHADER_STORAGE_BUFFER, 32 * 8 * sizeof(float), &m_outputdata[0], GL_STATIC_DRAW);
 
 	// MARCHING CUBES BUFFERS
-	size_t memSize = sizeof(GLuint) * mcubeConfiguration.numVoxels;
+	/*size_t memSize = sizeof(GLuint) * mcubeConfiguration.numVoxels;
 	size_t memSizeVec4 = sizeof(float) * 4 * mcubeConfiguration.maxVerts;
 
 	glGenBuffers(1, &m_bufferVoxelVerts);
@@ -338,7 +338,7 @@ void gFusion::allocateBuffers()
 
 	glGenBuffers(1, &m_bufferPrefixSumByGroup);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, m_bufferPrefixSumByGroup);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, memSize / 1024, NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, memSize / 1024, NULL, GL_DYNAMIC_DRAW);*/
 
 
 
@@ -1380,6 +1380,9 @@ void gFusion::reduce(int layer)
 	//std::cout << "image size " << m_imageSizeID << " " << imageSize.x << " " << imageSize.y << std::endl;
 	reduceProg.use();
 
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_buffer_reduction);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_buffer_outputdata);
+
 	glUniform2iv(m_imageSizeID, 1, glm::value_ptr(imageSize));
 	//glBindImageTexture(0, m_textureOutputData, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
@@ -1998,164 +2001,164 @@ void gFusion::intensityProjection()
 
 }
 
-GLuint gFusion::prefixSum(GLuint inputBuffer, GLuint outputBuffer)
-{
-	// reduction sum
-	prefixSumProg.use();
-	int xthreads = divup(mcubeConfiguration.numVoxels, 1024); // 1024 is the localworkgroupsize inside the shader
+//GLuint gFusion::prefixSum(GLuint inputBuffer, GLuint outputBuffer)
+//{
+//	// reduction sum
+//	prefixSumProg.use();
+//	int xthreads = divup(mcubeConfiguration.numVoxels, 1024); // 1024 is the localworkgroupsize inside the shader
+//
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, inputBuffer);
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, outputBuffer);
+//
+//	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_resetSumsArrayID);
+//	glDispatchCompute(1, 1, 1);
+//	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+//
+//	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_forEachGroupID);
+//	glDispatchCompute(xthreads, 1, 1);
+//	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+//
+//	int xthreads2 = divup(xthreads, 1024);
+//
+//	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_forEveryGroupID);
+//	glDispatchCompute(xthreads2, 1, 1);
+//	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+//
+//	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_forFinalIncrementalSumID);
+//	glDispatchCompute(xthreads, 1, 1);
+//	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+//
+//	uint32_t lastElement, lastScanElement;
+//	glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputBuffer);
+//	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, (mcubeConfiguration.numVoxels - 1) * sizeof(uint32_t), sizeof(uint32_t), &lastScanElement);
+//
+//	glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputBuffer);
+//	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, (mcubeConfiguration.numVoxels - 1) * sizeof(uint32_t), sizeof(uint32_t), &lastElement);
+//
+//	return lastElement + lastScanElement;
+//
+//}
 
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, inputBuffer);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, outputBuffer);
-
-	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_resetSumsArrayID);
-	glDispatchCompute(1, 1, 1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_forEachGroupID);
-	glDispatchCompute(xthreads, 1, 1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-	int xthreads2 = divup(xthreads, 1024);
-
-	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_forEveryGroupID);
-	glDispatchCompute(xthreads2, 1, 1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_forFinalIncrementalSumID);
-	glDispatchCompute(xthreads, 1, 1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-	uint32_t lastElement, lastScanElement;
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputBuffer);
-	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, (mcubeConfiguration.numVoxels - 1) * sizeof(uint32_t), sizeof(uint32_t), &lastScanElement);
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputBuffer);
-	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, (mcubeConfiguration.numVoxels - 1) * sizeof(uint32_t), sizeof(uint32_t), &lastElement);
-
-	return lastElement + lastScanElement;
-
-}
-
-void gFusion::marchingCubes()
-{
-
-
-	//glBeginQuery(GL_TIME_ELAPSED, query[4]);
-
-	int threads = 128;
-
-	// CLASSIFY VOXEL
-	marchingCubesProg.use();
-	// BIND TEXTURES
-	glBindImageTexture(0, m_textureVolume, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG16I);
-	glBindImageTexture(1, m_textureEdgeTable, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-	glBindImageTexture(2, m_textureTriTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-	glBindImageTexture(3, m_textureNumVertsTable, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-	// BIND BUFFERS
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, m_bufferVoxelVerts);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_bufferVoxelOccupied);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_bufferVoxelOccupiedScan);
-	// SET UNIFORMS
-	glUniform3uiv(m_gridSizeID, 1, glm::value_ptr(mcubeConfiguration.gridSize));
-	glUniform3uiv(m_gridSizeShiftID, 1, glm::value_ptr(mcubeConfiguration.gridSizeShift));
-	glUniform3uiv(m_gridSizeMaskID, 1, glm::value_ptr(mcubeConfiguration.gridSizeMask));
-	glUniform1f(m_isoValueID, mcubeConfiguration.isoValue);
-	glUniform1ui(m_numVoxelsID, mcubeConfiguration.numVoxels);
-
-	int xthreads = divup(mcubeConfiguration.numVoxels, threads);
-	int ythreads = 1;
-	if (xthreads > 65535)
-	{
-		ythreads = xthreads / 32768;
-		xthreads = 32768;
-	}
-	// LAUNCH SHADER
-	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_classifyVoxelID);
-	glDispatchCompute(xthreads, ythreads, 1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-	// PREFIX SUM
-	mcubeConfiguration.activeVoxels = prefixSum(m_bufferVoxelOccupied, m_bufferVoxelOccupiedScan);
-	//std::cout << "active voxels " << mcubeConfiguration.activeVoxels << std::endl;
-
-	// COMPACT VOXELS
-	marchingCubesProg.use();
-	// BIND TEXTURES
-	// BIND BUFFERS
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_bufferVoxelOccupied);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_bufferVoxelOccupiedScan);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_bufferCompactedVoxelArray);
-	// BIND UNIFORMS
-	glUniform1ui(m_numVoxelsID, mcubeConfiguration.numVoxels);
-
-	xthreads = divup(mcubeConfiguration.numVoxels, threads);
-	ythreads = 1;
-	if (xthreads > 65535)
-	{
-		ythreads = xthreads / 32768;
-		xthreads = 32768;
-	}
-	// LAUNCH SHADER
-	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_compactVoxelsID);
-	glDispatchCompute(xthreads, ythreads, 1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-	// PREFIX SUM
-	m_totalVerts = prefixSum(m_bufferVoxelVerts, m_bufferVoxelVertsScan);
-	//std::cout << "total verts " << m_totalVerts << std::endl;
-
-	// GENERATE TRIANGLES
-	marchingCubesProg.use();
-	// BIND TEXTURES
-	glBindImageTexture(0, m_textureVolume, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG16I);
-	glBindImageTexture(1, m_textureEdgeTable, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-	glBindImageTexture(2, m_textureTriTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-	glBindImageTexture(3, m_textureNumVertsTable, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-	// BIND BUFFERS
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_bufferCompactedVoxelArray);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, m_bufferVoxelVertsScan);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, m_bufferPos);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, m_bufferNorm);
-	// BIND UNIFORMS
-	glUniform3uiv(m_gridSizeID, 1, glm::value_ptr(mcubeConfiguration.gridSize));
-	glUniform3uiv(m_gridSizeShiftID, 1, glm::value_ptr(mcubeConfiguration.gridSizeShift));
-	glUniform3uiv(m_gridSizeMaskID, 1, glm::value_ptr(mcubeConfiguration.gridSizeMask));
-	glUniform1f(m_isoValueID, mcubeConfiguration.isoValue);
-	glUniform1ui(m_numVoxelsID, mcubeConfiguration.numVoxels);
-	glUniform1ui(m_activeVoxelsID, mcubeConfiguration.activeVoxels);
-	glUniform1ui(m_maxVertsID, mcubeConfiguration.maxVerts);
-	glUniform3fv(m_voxelSizeID, 1, glm::value_ptr(mcubeConfiguration.voxelSize));
-	
-	xthreads = divup(mcubeConfiguration.activeVoxels, threads);
-	ythreads = 1;
-	while (xthreads > 65535)
-	{
-		xthreads /= 2;
-		ythreads *= 2;
-	}
-	// LAUNCH SHADER
-	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_generateTrianglesID);
-	glDispatchCompute(xthreads, ythreads, 1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-	//glEndQuery(GL_TIME_ELAPSED);
-
-
-	//GLuint available = 0;
-	//while (!available) {
-	//	glGetQueryObjectuiv(query[4], GL_QUERY_RESULT_AVAILABLE, &available);
-	//}
-
-	//// elapsed time in nanoseconds
-	//GLuint64 elapsed;
-	//glGetQueryObjectui64vEXT(query[4], GL_QUERY_RESULT, &elapsed);
-
-	//marchingCubesTime = elapsed / 1000000.0;
-
-	//std::cout << "time elapsed " << marchingCubesTime << " ms" << std::endl;
-
-
-}
+//void gFusion::marchingCubes()
+//{
+//
+//
+//	//glBeginQuery(GL_TIME_ELAPSED, query[4]);
+//
+//	int threads = 128;
+//
+//	// CLASSIFY VOXEL
+//	marchingCubesProg.use();
+//	// BIND TEXTURES
+//	glBindImageTexture(0, m_textureVolume, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG16I);
+//	glBindImageTexture(1, m_textureEdgeTable, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+//	glBindImageTexture(2, m_textureTriTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+//	glBindImageTexture(3, m_textureNumVertsTable, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+//	// BIND BUFFERS
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, m_bufferVoxelVerts);
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_bufferVoxelOccupied);
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_bufferVoxelOccupiedScan);
+//	// SET UNIFORMS
+//	glUniform3uiv(m_gridSizeID, 1, glm::value_ptr(mcubeConfiguration.gridSize));
+//	glUniform3uiv(m_gridSizeShiftID, 1, glm::value_ptr(mcubeConfiguration.gridSizeShift));
+//	glUniform3uiv(m_gridSizeMaskID, 1, glm::value_ptr(mcubeConfiguration.gridSizeMask));
+//	glUniform1f(m_isoValueID, mcubeConfiguration.isoValue);
+//	glUniform1ui(m_numVoxelsID, mcubeConfiguration.numVoxels);
+//
+//	int xthreads = divup(mcubeConfiguration.numVoxels, threads);
+//	int ythreads = 1;
+//	if (xthreads > 65535)
+//	{
+//		ythreads = xthreads / 32768;
+//		xthreads = 32768;
+//	}
+//	// LAUNCH SHADER
+//	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_classifyVoxelID);
+//	glDispatchCompute(xthreads, ythreads, 1);
+//	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+//
+//	// PREFIX SUM
+//	mcubeConfiguration.activeVoxels = prefixSum(m_bufferVoxelOccupied, m_bufferVoxelOccupiedScan);
+//	//std::cout << "active voxels " << mcubeConfiguration.activeVoxels << std::endl;
+//
+//	// COMPACT VOXELS
+//	marchingCubesProg.use();
+//	// BIND TEXTURES
+//	// BIND BUFFERS
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_bufferVoxelOccupied);
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_bufferVoxelOccupiedScan);
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_bufferCompactedVoxelArray);
+//	// BIND UNIFORMS
+//	glUniform1ui(m_numVoxelsID, mcubeConfiguration.numVoxels);
+//
+//	xthreads = divup(mcubeConfiguration.numVoxels, threads);
+//	ythreads = 1;
+//	if (xthreads > 65535)
+//	{
+//		ythreads = xthreads / 32768;
+//		xthreads = 32768;
+//	}
+//	// LAUNCH SHADER
+//	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_compactVoxelsID);
+//	glDispatchCompute(xthreads, ythreads, 1);
+//	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+//
+//	// PREFIX SUM
+//	m_totalVerts = prefixSum(m_bufferVoxelVerts, m_bufferVoxelVertsScan);
+//	//std::cout << "total verts " << m_totalVerts << std::endl;
+//
+//	// GENERATE TRIANGLES
+//	marchingCubesProg.use();
+//	// BIND TEXTURES
+//	glBindImageTexture(0, m_textureVolume, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG16I);
+//	glBindImageTexture(1, m_textureEdgeTable, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+//	glBindImageTexture(2, m_textureTriTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+//	glBindImageTexture(3, m_textureNumVertsTable, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+//	// BIND BUFFERS
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, m_bufferCompactedVoxelArray);
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, m_bufferVoxelVertsScan);
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, m_bufferPos);
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, m_bufferNorm);
+//	// BIND UNIFORMS
+//	glUniform3uiv(m_gridSizeID, 1, glm::value_ptr(mcubeConfiguration.gridSize));
+//	glUniform3uiv(m_gridSizeShiftID, 1, glm::value_ptr(mcubeConfiguration.gridSizeShift));
+//	glUniform3uiv(m_gridSizeMaskID, 1, glm::value_ptr(mcubeConfiguration.gridSizeMask));
+//	glUniform1f(m_isoValueID, mcubeConfiguration.isoValue);
+//	glUniform1ui(m_numVoxelsID, mcubeConfiguration.numVoxels);
+//	glUniform1ui(m_activeVoxelsID, mcubeConfiguration.activeVoxels);
+//	glUniform1ui(m_maxVertsID, mcubeConfiguration.maxVerts);
+//	glUniform3fv(m_voxelSizeID, 1, glm::value_ptr(mcubeConfiguration.voxelSize));
+//	
+//	xthreads = divup(mcubeConfiguration.activeVoxels, threads);
+//	ythreads = 1;
+//	while (xthreads > 65535)
+//	{
+//		xthreads /= 2;
+//		ythreads *= 2;
+//	}
+//	// LAUNCH SHADER
+//	glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &m_generateTrianglesID);
+//	glDispatchCompute(xthreads, ythreads, 1);
+//	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+//
+//	//glEndQuery(GL_TIME_ELAPSED);
+//
+//
+//	//GLuint available = 0;
+//	//while (!available) {
+//	//	glGetQueryObjectuiv(query[4], GL_QUERY_RESULT_AVAILABLE, &available);
+//	//}
+//
+//	//// elapsed time in nanoseconds
+//	//GLuint64 elapsed;
+//	//glGetQueryObjectui64vEXT(query[4], GL_QUERY_RESULT, &elapsed);
+//
+//	//marchingCubesTime = elapsed / 1000000.0;
+//
+//	//std::cout << "time elapsed " << marchingCubesTime << " ms" << std::endl;
+//
+//
+//}
 
 void gFusion::updatePoseFinder()
 {
@@ -2295,135 +2298,135 @@ void gFusion::trackPoints3D(GLuint trackedPoints2Dbuffer)
 void gFusion::exportSurfaceAsStlBinary()
 {
 
-	std::string modelFileName = "data/meshes/marchingCubesBin.stl";
+	//std::string modelFileName = "data/meshes/marchingCubesBin.stl";
 
-	std::ofstream outFile(modelFileName, std::ios::out | std::ios::binary);
+	//std::ofstream outFile(modelFileName, std::ios::out | std::ios::binary);
 
-	if (!outFile)
-	{
-		//cerr << "Error opening output file: " << FileName << "!" << endl;
-		printf("Error opening output file: %s!\n", modelFileName);
-		exit(1);
-	}
+	//if (!outFile)
+	//{
+	//	//cerr << "Error opening output file: " << FileName << "!" << endl;
+	//	printf("Error opening output file: %s!\n", modelFileName);
+	//	exit(1);
+	//}
 
-	// copy cuda device to host
-
-
-	////
-	// Header
-	////
-
-	char hdr[80];
-
-	const int pointNum = mcubeConfiguration.maxVerts;
-	uint32_t NumTri = mcubeConfiguration.maxVerts / 3;
-	uint32_t attributeByteCount = 0;
-
-	//outFile.write(hdr, 80);
-	//outFile.write((char*)&NumTri, sizeof(uint));
-
-	// h_data is the posVbo, i.e. the array of verts of length maxVerts, sparse
-	// h_compVoxelArray is 
-	// h_voxelVerts is the number of verts in each voxel, i.e. an array of length volume height * width * depth with ints inside saying how many verts are inside each voxel. should this be 1 if one vox only contains one vert
-
-	std::vector<uint32_t> h_compVoxelArray, h_voxelVertsScan, h_voxelVerts;
-	h_compVoxelArray.resize(mcubeConfiguration.numVoxels);
-	h_voxelVertsScan.resize(mcubeConfiguration.numVoxels);
-	h_voxelVerts.resize(mcubeConfiguration.numVoxels);
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferCompactedVoxelArray);
-	void *ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-	memcpy_s(h_compVoxelArray.data(), h_compVoxelArray.size() * sizeof(uint32_t), ptr, h_compVoxelArray.size() * sizeof(uint32_t));
-	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferVoxelVertsScan);
-	void *ptr1 = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-	memcpy_s(h_voxelVertsScan.data(), h_voxelVertsScan.size() * sizeof(uint32_t), ptr1, h_voxelVertsScan.size() * sizeof(uint32_t));
-	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferVoxelVerts);
-	void *ptr2 = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-	memcpy_s(h_voxelVerts.data(), h_voxelVerts.size() * sizeof(uint32_t), ptr2, h_voxelVerts.size() * sizeof(uint32_t));
-	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
-	std::vector<float> hData, hDataNorm;
-	hData.resize(mcubeConfiguration.maxVerts * 4);
-	hDataNorm.resize(mcubeConfiguration.maxVerts * 4);
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferPos);
-	void *ptr3 = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-	memcpy_s(hData.data(), hData.size() * sizeof(float), ptr3, hData.size() * sizeof(float));
-	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferNorm);
-	void *ptr4 = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-	memcpy_s(hDataNorm.data(), hDataNorm.size() * sizeof(float), ptr4, hDataNorm.size() * sizeof(float));
-	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	outFile << "solid phils stler" << std::endl;
-
-	//std::cout << " verts ";
-	//for (int i = 0; i < m_totalVerts * 4; i++)
-	//	std::cout << hData[i] << " ";
-
-	for (int i = 0; i < m_totalVerts; i++) 
-	{
-		uint32_t voxel = h_compVoxelArray[i];
-		uint32_t index = h_voxelVertsScan[voxel]; // index is the start of the array from where your triangles are for current voxel, you need to go from this point to index + numvertinbox * 4
-		uint32_t numVertInVox = h_voxelVerts[voxel];
-
-		// each vertex is separated in hData by 4
-		//	vertex1 = hData[0] hData[1] hData[2]
-		//	vertex2 = hData[4] hData[5] hData[6]
-		//	vertex3 = hData[8] hData[9] hData[10]
-		// the next triangle starts at hData[12]
-			
+	//// copy cuda device to host
 
 
+	//////
+	//// Header
+	//////
 
+	//char hdr[80];
 
+	//const int pointNum = mcubeConfiguration.maxVerts;
+	//uint32_t NumTri = mcubeConfiguration.maxVerts / 3;
+	//uint32_t attributeByteCount = 0;
 
-		for (int j = 0; j < numVertInVox * 4; j += 12) // j is an incrementer of vertexes, previously we used a float 4
-		{
-			outFile << "facet normal " << hDataNorm[index * 4 + j + 0] * -1.0f << " " << hDataNorm[index * 4 + j + 1] * -1.0f << " " << hDataNorm[index * 4 + j + 2] * -1.0f << std::endl;
-			outFile << "outer loop" << std::endl;
-			outFile << "vertex " << hData[index * 4 + j + 0] << " " << hData[index * 4 + j + 1] << " " << hData[index * 4 + j + 2] << std::endl;
-			outFile << "vertex " << hData[index * 4 + j + 4] << " " << hData[index * 4 + j + 5] << " " << hData[index * 4 + j + 6] << std::endl;
-			outFile << "vertex " << hData[index * 4 + j + 8] << " " << hData[index * 4 + j + 9] << " " << hData[index * 4 + j + 10] << std::endl;
-			outFile << "endloop" << std::endl;
-			outFile << "endfacet" << std::endl;
+	////outFile.write(hdr, 80);
+	////outFile.write((char*)&NumTri, sizeof(uint));
 
-		}
+	//// h_data is the posVbo, i.e. the array of verts of length maxVerts, sparse
+	//// h_compVoxelArray is 
+	//// h_voxelVerts is the number of verts in each voxel, i.e. an array of length volume height * width * depth with ints inside saying how many verts are inside each voxel. should this be 1 if one vox only contains one vert
 
-		//for (int j = 0; j < numVertInVox; j += 3) // oh yeah
-		//{
+	//std::vector<uint32_t> h_compVoxelArray, h_voxelVertsScan, h_voxelVerts;
+	//h_compVoxelArray.resize(mcubeConfiguration.numVoxels);
+	//h_voxelVertsScan.resize(mcubeConfiguration.numVoxels);
+	//h_voxelVerts.resize(mcubeConfiguration.numVoxels);
 
+	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferCompactedVoxelArray);
+	//void *ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+	//memcpy_s(h_compVoxelArray.data(), h_compVoxelArray.size() * sizeof(uint32_t), ptr, h_compVoxelArray.size() * sizeof(uint32_t));
+	//glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		//	outFile.write((char*)&hDataNorm[index + (j * 3) + 0], sizeof(float));
-		//	outFile.write((char*)&hDataNorm[index + (j * 3) + 1], sizeof(float));
-		//	outFile.write((char*)&hDataNorm[index + (j * 3) + 2], sizeof(float));
+	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferVoxelVertsScan);
+	//void *ptr1 = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+	//memcpy_s(h_voxelVertsScan.data(), h_voxelVertsScan.size() * sizeof(uint32_t), ptr1, h_voxelVertsScan.size() * sizeof(uint32_t));
+	//glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		//	outFile.write((char*)&hData[index + (j * 3) + 0], sizeof(float));
-		//	outFile.write((char*)&hData[index + (j * 3) + 0], sizeof(float));
-		//	outFile.write((char*)&hData[index + (j * 3) + 0], sizeof(float));
+	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferVoxelVerts);
+	//void *ptr2 = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+	//memcpy_s(h_voxelVerts.data(), h_voxelVerts.size() * sizeof(uint32_t), ptr2, h_voxelVerts.size() * sizeof(uint32_t));
+	//glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		//	outFile.write((char*)&hData[index + (j * 3) + 1], sizeof(float));
-		//	outFile.write((char*)&hData[index + (j * 3) + 1], sizeof(float));
-		//	outFile.write((char*)&hData[index + (j * 3) + 1], sizeof(float));
+	//std::vector<float> hData, hDataNorm;
+	//hData.resize(mcubeConfiguration.maxVerts * 4);
+	//hDataNorm.resize(mcubeConfiguration.maxVerts * 4);
 
-		//	outFile.write((char*)&hData[index + (j * 3) + 2], sizeof(float));
-		//	outFile.write((char*)&hData[index + (j * 3) + 2], sizeof(float));
-		//	outFile.write((char*)&hData[index + (j * 3) + 2], sizeof(float));
+	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferPos);
+	//void *ptr3 = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+	//memcpy_s(hData.data(), hData.size() * sizeof(float), ptr3, hData.size() * sizeof(float));
+	//glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		//	outFile.write((char*)&attributeByteCount, sizeof(uint));
+	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferNorm);
+	//void *ptr4 = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+	//memcpy_s(hDataNorm.data(), hDataNorm.size() * sizeof(float), ptr4, hDataNorm.size() * sizeof(float));
+	//glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+	//outFile << "solid phils stler" << std::endl;
 
-		//}
+	////std::cout << " verts ";
+	////for (int i = 0; i < m_totalVerts * 4; i++)
+	////	std::cout << hData[i] << " ";
 
-	}
+	//for (int i = 0; i < m_totalVerts; i++) 
+	//{
+	//	uint32_t voxel = h_compVoxelArray[i];
+	//	uint32_t index = h_voxelVertsScan[voxel]; // index is the start of the array from where your triangles are for current voxel, you need to go from this point to index + numvertinbox * 4
+	//	uint32_t numVertInVox = h_voxelVerts[voxel];
+
+	//	// each vertex is separated in hData by 4
+	//	//	vertex1 = hData[0] hData[1] hData[2]
+	//	//	vertex2 = hData[4] hData[5] hData[6]
+	//	//	vertex3 = hData[8] hData[9] hData[10]
+	//	// the next triangle starts at hData[12]
+	//		
 
 
 
 
-	outFile.close();
+
+	//	for (int j = 0; j < numVertInVox * 4; j += 12) // j is an incrementer of vertexes, previously we used a float 4
+	//	{
+	//		outFile << "facet normal " << hDataNorm[index * 4 + j + 0] * -1.0f << " " << hDataNorm[index * 4 + j + 1] * -1.0f << " " << hDataNorm[index * 4 + j + 2] * -1.0f << std::endl;
+	//		outFile << "outer loop" << std::endl;
+	//		outFile << "vertex " << hData[index * 4 + j + 0] << " " << hData[index * 4 + j + 1] << " " << hData[index * 4 + j + 2] << std::endl;
+	//		outFile << "vertex " << hData[index * 4 + j + 4] << " " << hData[index * 4 + j + 5] << " " << hData[index * 4 + j + 6] << std::endl;
+	//		outFile << "vertex " << hData[index * 4 + j + 8] << " " << hData[index * 4 + j + 9] << " " << hData[index * 4 + j + 10] << std::endl;
+	//		outFile << "endloop" << std::endl;
+	//		outFile << "endfacet" << std::endl;
+
+	//	}
+
+	//	//for (int j = 0; j < numVertInVox; j += 3) // oh yeah
+	//	//{
+
+
+	//	//	outFile.write((char*)&hDataNorm[index + (j * 3) + 0], sizeof(float));
+	//	//	outFile.write((char*)&hDataNorm[index + (j * 3) + 1], sizeof(float));
+	//	//	outFile.write((char*)&hDataNorm[index + (j * 3) + 2], sizeof(float));
+
+	//	//	outFile.write((char*)&hData[index + (j * 3) + 0], sizeof(float));
+	//	//	outFile.write((char*)&hData[index + (j * 3) + 0], sizeof(float));
+	//	//	outFile.write((char*)&hData[index + (j * 3) + 0], sizeof(float));
+
+	//	//	outFile.write((char*)&hData[index + (j * 3) + 1], sizeof(float));
+	//	//	outFile.write((char*)&hData[index + (j * 3) + 1], sizeof(float));
+	//	//	outFile.write((char*)&hData[index + (j * 3) + 1], sizeof(float));
+
+	//	//	outFile.write((char*)&hData[index + (j * 3) + 2], sizeof(float));
+	//	//	outFile.write((char*)&hData[index + (j * 3) + 2], sizeof(float));
+	//	//	outFile.write((char*)&hData[index + (j * 3) + 2], sizeof(float));
+
+	//	//	outFile.write((char*)&attributeByteCount, sizeof(uint));
+
+	//	//}
+
+	//}
+
+
+
+
+	//outFile.close();
 
 
 

@@ -16,6 +16,7 @@
 //#include "openCVStuff.h"
 #include "gFusion.h"
 #include "gDisOptFlow.h"
+#include "mcubes.h"
 
 #include <tinyxml2.h>
 
@@ -31,11 +32,14 @@ kRender krender;
 
 Freenect2Camera kcamera;
 
+MCubes mcubes;
+mCubeConfig mcconfig;
+
+
 //openCVStuff OCVStuff;
 
 gFusion gfusion;
 gFusionConfig gconfig;
-mCubeConfig mcconfig;
 gDisOptFlow gdisoptflow;
 
 tinyxml2::XMLDocument calibrationXML;

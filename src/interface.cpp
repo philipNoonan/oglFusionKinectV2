@@ -229,7 +229,7 @@ void Freenect2Camera::captureLoop()
 	dev->setColorFrameListener(&listener);
 	dev->setIrAndDepthFrameListener(&listener);
 
-	dev->setConfiguration(configNearMode, 0.1322581f, 1.0f, 0.1612903f);
+	dev->setConfiguration(configNearMode, 0.01322581f, 1.0f, 0.01612903f);
 
 	if (!dev->start())
 		return;

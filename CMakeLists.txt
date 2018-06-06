@@ -113,6 +113,12 @@ get_filename_component(ResourceName ${ResourceFile} NAME)
 	)
 endforeach()
 
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/data/meshes)
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/data/motion)
+
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/bin/debug/data/meshes)
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/bin/release/data/motion)
+
 
 add_executable(${PROJECT_NAME} ${SRC})
 add_dependencies(${PROJECT_NAME} shadersNM resourcesNM)

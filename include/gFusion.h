@@ -81,30 +81,30 @@ struct gFusionConfig
 	}
 };
 
-struct mCubeConfig
-{
-	glm::uvec3 gridSize;
-	glm::uvec3 gridSizeMask;
-	glm::uvec3 gridSizeShift;
-	GLuint numVoxels;
-	glm::vec3 voxelSize;
-	float isoValue;
-	GLuint maxVerts;
-	float activeVoxels;
-
-	mCubeConfig()
-	{
-		gridSize = glm::uvec3(128, 128, 128);
-		gridSizeMask = glm::uvec3(gridSize.x - 1, gridSize.y - 1, gridSize.z - 1);
-		gridSizeShift = glm::uvec3(0, log2(gridSize.x), log2(gridSize.y) + log2(gridSize.z));
-		numVoxels = gridSize.x * gridSize.y * gridSize.z;
-		voxelSize = glm::vec3(1.0f * 1000.0f / 128.0f, 1.0f * 1000.0f / 128.0f, 1.0f * 1000.0f / 128.0f);
-		isoValue = 0.0f;
-		maxVerts = 128 * 128 * 128;
-		
-	}
-
-};
+//struct mCubeConfig
+//{
+//	glm::uvec3 gridSize;
+//	glm::uvec3 gridSizeMask;
+//	glm::uvec3 gridSizeShift;
+//	GLuint numVoxels;
+//	glm::vec3 voxelSize;
+//	float isoValue;
+//	GLuint maxVerts;
+//	float activeVoxels;
+//
+//	mCubeConfig()
+//	{
+//		gridSize = glm::uvec3(128, 128, 128);
+//		gridSizeMask = glm::uvec3(gridSize.x - 1, gridSize.y - 1, gridSize.z - 1);
+//		gridSizeShift = glm::uvec3(0, log2(gridSize.x), log2(gridSize.y) + log2(gridSize.z));
+//		numVoxels = gridSize.x * gridSize.y * gridSize.z;
+//		voxelSize = glm::vec3(1.0f * 1000.0f / 128.0f, 1.0f * 1000.0f / 128.0f, 1.0f * 1000.0f / 128.0f);
+//		isoValue = 0.0f;
+//		maxVerts = 128 * 128 * 128;
+//		
+//	}
+//
+//};
 
 struct gPosePair
 {
@@ -128,7 +128,7 @@ public:
 	~gFusion();
 
 	gFusionConfig configuration;
-	mCubeConfig mcubeConfiguration;
+	//mCubeConfig mcubeConfiguration;
 	glm::mat4 pose, raycastPose;
 
 	void queryDeviceLimits();
@@ -195,10 +195,10 @@ public:
 	{
 		configuration = config;
 	}
-	void setMcConfig(mCubeConfig config)
-	{
-		mcubeConfiguration = config;
-	}
+	//void setMcConfig(mCubeConfig config)
+	//{
+	//	mcubeConfiguration = config;
+	//}
 	GLuint getDepthImage()
 	{
 		return m_textureDepth;
