@@ -12,10 +12,10 @@
 #include <glm/gtx/norm.hpp>
 
 
-#include "opencv2/core/utility.hpp"
-#include "opencv2/opencv.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
+//#include "opencv2/core/utility.hpp"
+//#include "opencv2/opencv.hpp"
+//#include "opencv2/imgproc/imgproc.hpp"
+//#include "opencv2/highgui/highgui.hpp"
 
 
 #include <Eigen/Core>
@@ -567,7 +567,7 @@ private:
 
 	// MARCHING CUBES
 	// SET UP TABLES TEXTURES
-	void setTablesForMarchingCubes();
+	//void setTablesForMarchingCubes();
 	/*{
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_1D, m_textureEdgeTable);

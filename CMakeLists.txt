@@ -33,7 +33,7 @@ include(BasicConfig)
 
 
 # OpenCV
-set(OpenCV_DIR "${THIRD_PARTY_DIR}/opencv")
+#set(OpenCV_DIR "${THIRD_PARTY_DIR}/opencv")
 
 find_package(freenect2 REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -44,7 +44,7 @@ find_package(imgui REQUIRED)
 find_package(eigen3 REQUIRED)
 find_package(tinyxml2 REQUIRED)
 
-find_package(OpenCV REQUIRED)
+#find_package(OpenCV REQUIRED)
 
 add_definitions(-DEIGEN_USE_NEW_STDVECTOR
                 -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET)#find_package(REALSENSE2 REQUIRED)
@@ -131,8 +131,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_PDB_NAME_DEBUG "${PROJE
 target_include_directories(${PROJECT_NAME} PUBLIC "include")
 target_include_directories(${PROJECT_NAME} PUBLIC "graphics")
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+#target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
+#target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${freenect2_INCLUDE_DIRS})
 

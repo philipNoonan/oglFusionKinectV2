@@ -58,37 +58,102 @@ void mCubeInit()
 
 }
 
+std::vector<float> splitStringToVector(const char * xmlString)
+{
+	std::string strOutMat = xmlString;
+	// this purges commas if present in the xml
+	strOutMat.erase(std::remove(strOutMat.begin(), strOutMat.end(), ','), strOutMat.end());
+
+	std::istringstream ss(strOutMat);
+	float val;
+	int idx = 0;
+
+	std::vector<float> res;
+	while (ss >> val)
+	{
+		res.push_back(val);
+	}
+	return res;
+}
+
+// this uses tinyxml rather than opencv xml reader
+// implement a yaml and json reader too
+// this currently works for opencv style xml where there is just whitepace separating the values
 int loadCalibration(std::string calibFile)
 {
-	//tinyxml2::XMLError eResult = calibrationXML.LoadFile("./Resources/calib.xml");
-	//tinyxml2::XMLNode * pRoot = calibrationXML.FirstChild();
+	tinyxml2::XMLError eResult = calibrationXML.LoadFile(calibFile.c_str());
 
-	//if (pRoot == nullptr) return tinyxml2::XML_ERROR_FILE_READ_ERROR;
+	tinyxml2::XMLNode * pRootCM = calibrationXML.FirstChildElement("Camera_Matrix");
+	if (pRootCM == nullptr) return tinyxml2::XML_ERROR_FILE_READ_ERROR;
+	tinyxml2::XMLElement * pElement = pRootCM->FirstChildElement("data");
+	if (pElement == nullptr) return tinyxml2::XML_ERROR_PARSING_ELEMENT;
+	const char * cameraString = pElement->GetText();
 
-	cv::FileStorage fs(calibFile, cv::FileStorage::READ);
+	std::vector<float> resCM = splitStringToVector(cameraString);
 
-	cv::Mat_ <float> cMat(3, 3);
-	cv::Mat_ <float> dVec(5, 1);
-	fs["camera_matrix"] >> cMat;      
-	fs["distortion_coefficients"] >> dVec;// 
-	fs.release();
+	tinyxml2::XMLNode * pRootDi = calibrationXML.FirstChildElement("Distortion_Coefficients");
+	if (pRootDi == nullptr) return tinyxml2::XML_ERROR_FILE_READ_ERROR;
+	tinyxml2::XMLElement * pElementDi = pRootDi->FirstChildElement("data");
+	if (pElementDi == nullptr) return tinyxml2::XML_ERROR_PARSING_ELEMENT;
+	const char * distortionString = pElementDi->GetText();
 
-	std::cout << cMat << std::endl;
-	std::cout << dVec << std::endl;
+	std::vector<float> resDi = splitStringToVector(distortionString);
+
 
 	camPams newCamPams;
-	newCamPams.fx = cMat(0, 0);
-	newCamPams.fy = cMat(1, 1);
-	newCamPams.ppx = cMat(0, 2);
-	newCamPams.ppy = cMat(1, 2);
+	// catch if crash here due to input xml not being correctly read in for the 9 values
+	newCamPams.fx = resCM[0];
+	newCamPams.fy = resCM[4];
+	newCamPams.ppx = resCM[2];
+	newCamPams.ppy = resCM[5];
 
-	newCamPams.k1 = dVec(0);
-	newCamPams.k2 = dVec(1);
-	newCamPams.p1 = dVec(2);
-	newCamPams.p2 = dVec(3);
-	newCamPams.k3 = dVec(4);
+	// catch if crash here due to input xml not being correctly read in for the 5 values
+	newCamPams.k1 = resDi[0];
+	newCamPams.k2 = resDi[1];
+	newCamPams.p1 = resDi[2];
+	newCamPams.p2 = resDi[3];
+	newCamPams.k3 = resDi[4];
 
 	kcamera.setDepthCamPams(newCamPams);
+	
+
+
+	//std::vector<float> camMats(9, 0);
+	//tinyxml2::XMLElement * child = pRoot->FirstChildElement("data");
+
+	//for (int i = 0; i < 8; i++)
+	//{
+	//	float val;
+	//	child->QueryFloatText(&val);
+	//	std::cout << val << std::endl;
+	//	child->NextSiblingElement();
+	//}
+
+
+	//cv::FileStorage fs(calibFile, cv::FileStorage::READ);
+
+	//cv::Mat_ <float> cMat(3, 3);
+	//cv::Mat_ <float> dVec(5, 1);
+	//fs["camera_matrix"] >> cMat;      
+	//fs["distortion_coefficients"] >> dVec;// 
+	//fs.release();
+
+	//std::cout << cMat << std::endl;
+	//std::cout << dVec << std::endl;
+
+	//camPams newCamPams;
+	//newCamPams.fx = cMat(0, 0);
+	//newCamPams.fy = cMat(1, 1);
+	//newCamPams.ppx = cMat(0, 2);
+	//newCamPams.ppy = cMat(1, 2);
+
+	//newCamPams.k1 = dVec(0);
+	//newCamPams.k2 = dVec(1);
+	//newCamPams.p1 = dVec(2);
+	//newCamPams.p2 = dVec(3);
+	//newCamPams.k3 = dVec(4);
+
+	//kcamera.setDepthCamPams(newCamPams);
 
 
 	//std::cout << cMat << std::endl;
@@ -465,7 +530,9 @@ int main(int, char**)
 				if (ImGui::Button("Open Calib"))
 				{
 					// open dialogue to set kinect calibration yml, xml
-					std::string calFile("resources/infrared.yml");
+					//std::string calFile("resources/infrared.yml");
+					std::string calFile("resources/infrared.xml");
+
 					loadCalibration(calFile);
 					defaultCalibration = false;
 				}
