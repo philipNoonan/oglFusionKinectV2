@@ -81,93 +81,88 @@ std::vector<float> splitStringToVector(const char * xmlString)
 // this currently works for opencv style xml where there is just whitepace separating the values
 int loadCalibration(std::string calibFile)
 {
-	tinyxml2::XMLError eResult = calibrationXML.LoadFile(calibFile.c_str());
-
-	tinyxml2::XMLNode * pRootCM = calibrationXML.FirstChildElement("Camera_Matrix");
-	if (pRootCM == nullptr) return tinyxml2::XML_ERROR_FILE_READ_ERROR;
-	tinyxml2::XMLElement * pElement = pRootCM->FirstChildElement("data");
-	if (pElement == nullptr) return tinyxml2::XML_ERROR_PARSING_ELEMENT;
-	const char * cameraString = pElement->GetText();
-
-	std::vector<float> resCM = splitStringToVector(cameraString);
-
-	tinyxml2::XMLNode * pRootDi = calibrationXML.FirstChildElement("Distortion_Coefficients");
-	if (pRootDi == nullptr) return tinyxml2::XML_ERROR_FILE_READ_ERROR;
-	tinyxml2::XMLElement * pElementDi = pRootDi->FirstChildElement("data");
-	if (pElementDi == nullptr) return tinyxml2::XML_ERROR_PARSING_ELEMENT;
-	const char * distortionString = pElementDi->GetText();
-
-	std::vector<float> resDi = splitStringToVector(distortionString);
-
-
 	camPams newCamPams;
-	// catch if crash here due to input xml not being correctly read in for the 9 values
-	newCamPams.fx = resCM[0];
-	newCamPams.fy = resCM[4];
-	newCamPams.ppx = resCM[2];
-	newCamPams.ppy = resCM[5];
 
-	// catch if crash here due to input xml not being correctly read in for the 5 values
-	newCamPams.k1 = resDi[0];
-	newCamPams.k2 = resDi[1];
-	newCamPams.p1 = resDi[2];
-	newCamPams.p2 = resDi[3];
-	newCamPams.k3 = resDi[4];
+	if (std::filesystem::path(calibFile).extension() == ".xml")
+	{
+		// IF XML
+		tinyxml2::XMLError eResult = calibrationXML.LoadFile(calibFile.c_str());
 
+		tinyxml2::XMLNode * pRootCM = calibrationXML.FirstChildElement("Camera_Matrix");
+		if (pRootCM == nullptr) return tinyxml2::XML_ERROR_FILE_READ_ERROR;
+		tinyxml2::XMLElement * pElement = pRootCM->FirstChildElement("data");
+		if (pElement == nullptr) return tinyxml2::XML_ERROR_PARSING_ELEMENT;
+		const char * cameraString = pElement->GetText();
+
+		std::vector<float> resCM = splitStringToVector(cameraString);
+
+		tinyxml2::XMLNode * pRootDi = calibrationXML.FirstChildElement("Distortion_Coefficients");
+		if (pRootDi == nullptr) return tinyxml2::XML_ERROR_FILE_READ_ERROR;
+		tinyxml2::XMLElement * pElementDi = pRootDi->FirstChildElement("data");
+		if (pElementDi == nullptr) return tinyxml2::XML_ERROR_PARSING_ELEMENT;
+		const char * distortionString = pElementDi->GetText();
+
+		std::vector<float> resDi = splitStringToVector(distortionString);
+
+		newCamPams.fx = resCM[0];
+		newCamPams.fy = resCM[4];
+		newCamPams.ppx = resCM[2];
+		newCamPams.ppy = resCM[5];
+
+		// catch if crash here due to input xml not being correctly read in for the 5 values
+		newCamPams.k1 = resDi[0];
+		newCamPams.k2 = resDi[1];
+		newCamPams.p1 = resDi[2];
+		newCamPams.p2 = resDi[3];
+		newCamPams.k3 = resDi[4];
+	}
+	else if (std::filesystem::path(calibFile).extension() == ".json")
+	{
+		kcamera.setDepthCamPams(newCamPams);
+
+		// IF JSON
+		std::ifstream i("resources/infrared.json");
+		nlohmann::json j;
+		i >> j;
+
+		nlohmann::json dataCM = j["camera_matrix"];
+		std::vector<std::vector<float>> tDataCM;
+
+		for (auto it = dataCM.begin(); it != dataCM.end(); ++it)
+		{
+			tDataCM.push_back(*it);
+		}
+
+		nlohmann::json dataDis = j["dist_coeff"];
+		std::vector<float> tDataDis;
+
+		for (auto it = dataDis.begin(); it != dataDis.end(); ++it)
+		{
+			tDataDis.push_back(*it);
+		}
+
+		newCamPams.fx = tDataCM[0][0];
+		newCamPams.fy = tDataCM[1][1];
+		newCamPams.ppx = tDataCM[0][2];
+		newCamPams.ppy = tDataCM[1][2];
+
+		// catch if crash here due to input xml not being correctly read in for the 5 values
+		newCamPams.k1 = tDataDis[0];
+		newCamPams.k2 = tDataDis[1];
+		newCamPams.p1 = tDataDis[2];
+		newCamPams.p2 = tDataDis[3];
+		newCamPams.k3 = tDataDis[4];
+	}
+	else
+	{
+		std::cout << "please use a .xml or .json file for loading calibration data" << std::endl;
+		return 0;
+	}
+	
 	kcamera.setDepthCamPams(newCamPams);
 	
-
-
-	//std::vector<float> camMats(9, 0);
-	//tinyxml2::XMLElement * child = pRoot->FirstChildElement("data");
-
-	//for (int i = 0; i < 8; i++)
-	//{
-	//	float val;
-	//	child->QueryFloatText(&val);
-	//	std::cout << val << std::endl;
-	//	child->NextSiblingElement();
-	//}
-
-
-	//cv::FileStorage fs(calibFile, cv::FileStorage::READ);
-
-	//cv::Mat_ <float> cMat(3, 3);
-	//cv::Mat_ <float> dVec(5, 1);
-	//fs["camera_matrix"] >> cMat;      
-	//fs["distortion_coefficients"] >> dVec;// 
-	//fs.release();
-
-	//std::cout << cMat << std::endl;
-	//std::cout << dVec << std::endl;
-
-	//camPams newCamPams;
-	//newCamPams.fx = cMat(0, 0);
-	//newCamPams.fy = cMat(1, 1);
-	//newCamPams.ppx = cMat(0, 2);
-	//newCamPams.ppy = cMat(1, 2);
-
-	//newCamPams.k1 = dVec(0);
-	//newCamPams.k2 = dVec(1);
-	//newCamPams.p1 = dVec(2);
-	//newCamPams.p2 = dVec(3);
-	//newCamPams.k3 = dVec(4);
-
-	//kcamera.setDepthCamPams(newCamPams);
-
-
-	//std::cout << cMat << std::endl;
-	//if (!markerDict.fromFile(dictFile))
-	//{
-	//	cerr << "cannot open dictionary file " << dictFile << endl;
-	//	return false;
-	//}
-	//if (markerDict.empty())
-	//{
-	//	cerr << "marker dictionary file is empty" << endl;
-	//	return false;
-	//}
-
+	// YAML as well?
+	
 	return 1;
 }
 
