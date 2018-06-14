@@ -1,6 +1,9 @@
 # oglFusionKinectV2
 An openGL GLSL implementation of KinectFusion for the Kinect v2
 
+![oglFusion](docs/oglfusionNM.jpg?raw=true "near mode Kinect v2")
+
+
 <h2>Installation</h2>
 
 <h3>Dependencies</h2>

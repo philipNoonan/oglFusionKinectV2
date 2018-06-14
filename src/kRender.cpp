@@ -544,7 +544,7 @@ void kRender::Render(bool useInfrared)
 	bindBuffersForRendering();
 	//setDepthImageRenderPosition();
 	setNormalImageRenderPosition();
-	setViewport(32, 900 - 32 - 424, 512, 424);
+	setViewport(m_display2DPos.x, m_display2DPos.y, m_display2DSize.x, m_display2DSize.y);
 
 	renderLiveVideoWindow(useInfrared);
 

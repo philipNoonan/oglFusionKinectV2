@@ -13,6 +13,8 @@
 #include <algorithm>
 
 #include "kRender.h"
+#include "renderHelpers.h"
+
 #include "interface.h"
 //#include "openCVStuff.h"
 #include "gFusion.h"
@@ -22,6 +24,9 @@
 #include <tinyxml2.h>
 #include <nlohmann/json.hpp>
 #include <filesystem>
+
+#include "ImGuiFileDialog.h"
+
 
 //#include "opencv2/core/utility.hpp"
 //#include "opencv2/highgui.hpp"
@@ -45,6 +50,11 @@ gFusionConfig gconfig;
 gDisOptFlow gdisoptflow;
 
 tinyxml2::XMLDocument calibrationXML;
+
+renderWindow navigationWindow;
+renderWindow display2DWindow;
+renderWindow display3DWindow;
+renderWindow graphWindow;
 
 //cv::Mat flow;// = cv::Mat(424, 512, CV_8UC3);
 //cv::Mat tFlow;
@@ -148,12 +158,16 @@ glm::vec3 iOff;
 
 glm::vec3 initOffset(int pixX, int pixY)
 {
-	float z = depthArray[pixY * depthWidth + pixX] / 1000.0f;
+	int pointX = float(pixX) * (float(depthWidth) / float(display2DWindow.w));
+	int pointY = depthHeight - float(pixY) * (float(depthHeight) / float(display2DWindow.h));
+
+
+	float z = depthArray[pointY * depthWidth + pointX] / 1000.0f;
 	//kcamera.fx(), kcamera.fx(), kcamera.ppx(), kcamera.ppy()
 	camPams currentCamPams = kcamera.getDepthCamPams();
 
-	float x = (pixX - currentCamPams.ppx) * (1.0f / currentCamPams.fx) * z;
-	float y = (pixY - currentCamPams.ppy) * (1.0f / currentCamPams.fx) * z;
+	float x = (pointX - currentCamPams.ppx) * (1.0f / currentCamPams.fx) * z;
+	float y = (pointY - currentCamPams.ppy) * (1.0f / currentCamPams.fx) * z;
 
 	std::cout << "x " << x << " y " << y << " z " << z << std::endl;
 
@@ -186,3 +200,16 @@ int imageNumber = 0;
 
 float mouseX = 0;
 float mouseY = 0;
+
+
+
+
+void setupGPU();
+void setUI();
+void setUIStyle();
+
+bool cameraRunning = false;
+anchorPoint controlPoint0;
+
+bool imguiFocus2D = false;
+glm::vec2 mousePos = glm::vec2(0, 0);

@@ -40,8 +40,8 @@ public:
 	kRender()
 		: m_window()
 		, m_show_imgui(true)
-		, m_screen_height(900)
-		, m_screen_width(1600)
+		, m_screen_height(1080)
+		, m_screen_width(1920)
 		, m_depth_height(424)
 		, m_depth_width(512)
 		, m_color_height(1080)
@@ -92,6 +92,11 @@ public:
 	void renderScaleWidth(float scale)
 	{
 		m_render_scale_width = scale;
+	}
+	void setDisplayOriSize(int x, int y, int w, int h)
+	{
+		m_display2DPos = glm::vec2(x, y);
+		m_display2DSize = glm::vec2(w, h);
 	}
 
 	//std::vector<float> graphPointsX()
@@ -469,4 +474,7 @@ private:
 	float m_center_pixY;
 
 	float m_volumeSDFRenderSlice = 0;
+
+	glm::vec2 m_display2DPos;
+	glm::vec2 m_display2DSize;
 };
