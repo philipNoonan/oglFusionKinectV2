@@ -459,8 +459,6 @@ void setUI()
 
 			iOff = initOffset(mousePos.x - controlPoint0.x, controlPoint0.y - mousePos.y);
 
-			std::cout << "lalala " << mousePos.x - controlPoint0.x << " " << controlPoint0.y - mousePos.y<< std::endl;
-
 			glm::mat4 initPose = glm::translate(glm::mat4(1.0f), glm::vec3(-iOff.x + gconfig.volumeDimensions.x / 2.0f, -iOff.y + gconfig.volumeDimensions.y / 2.0f, -iOff.z + dimension / 2.0));
 
 
@@ -484,12 +482,10 @@ void setUI()
 		if (ImGui::Button("DO SUM")) gfusion.testPrefixSum();
 		if (ImGui::Button("save stl"))
 		{
-			//gfusion.marchingCubes();
-			//gfusion.exportSurfaceAsStlBinary();
+
 
 			mcconfig.gridSize = glm::uvec3(gconfig.volumeSize.x, gconfig.volumeSize.y, gconfig.volumeSize.z);
-			//mcconfig.numVoxels = mcconfig.gridSize.x * mcconfig.gridSize.y * mcconfig.gridSize.z;
-			//mcconfig.maxVerts = std::min(mcconfig.gridSize.x * mcconfig.gridSize.y * 128, uint32_t(128 * 128 * 128));
+
 
 			mcubes.setConfig(mcconfig);
 
@@ -538,15 +534,7 @@ void setUI()
 		ImGui::Separator();
 		ImGui::Text("Other Options");
 
-		if (ImGui::Button("Select color points")) select_color_points_mode ^= 1; ImGui::SameLine();
-		//if (ImGui::Button("Reset")) OCVStuff.resetColorPoints();
 
-		if (ImGui::Button("Select depth points")) select_depth_points_mode ^= 1; ImGui::SameLine();
-		//if (ImGui::Button("Reset Depth")) krender.resetRegistrationMatrix();
-
-		//if (ImGui::Button("Export PLY")) krender.setExportPly(true);
-		//if (ImGui::Button("Export PLY")) krender.exportPointCloud();
-		//if (ImGui::Button("Save Color")) OCVStuff.saveImage(0); // saving color image (flag == 0)
 
 
 		ImGui::Separator();
@@ -569,20 +557,6 @@ void setUI()
 		ImGui::Separator();
 		ImGui::Text("Infrared Adj.");
 
-		//cv::imshow("irg", infraGrey);
-
-		//if (ImGui::Button("Save Infra")) OCVStuff.saveImage(1);  // saving infra image (flag == 1)
-		//ImGui::SliderFloat("depthMin", &depthMin, 0.0f, 10.0f);
-		/*if (irLow > (irHigh - 255.0f))
-		{
-		irHigh = irLow + 255.0f;
-		}*/
-		//ImGui::SliderFloat("depthMax", &depthMax, 0.0f, 10.0f);
-		//if (irHigh < (irLow + 255.0f))
-		//{
-		//	irLow = irHigh - 255.0f;
-		//}
-		//krender.setDepthMinMax(depthMin, depthMax);
 
 		ImGui::SliderFloat("irLow", &irLow, 0.0f, 65536.0f - 255.0f);
 		if (irLow > (irHigh - 255.0f))
@@ -767,9 +741,6 @@ int main(int, char**)
 
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
-
-
-
 
 		krender.setDepthImageRenderPosition(vertFov);
 		krender.setRayNormImageRenderPosition(vertFov);
