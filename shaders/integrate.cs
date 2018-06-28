@@ -75,43 +75,79 @@ void main()
 
         if (depth.x == 0)
             continue;
-
         float diff = (depth.x - cameraX.z) * sqrt(1 + pow(pos.x / pos.z, 2) + pow(pos.y / pos.z, 2));
         //if (abs(diff) < 0.1f)
-            if (diff > -mu)
-            {
-                //if ((diff) < 0.1)
-                //{
-                float sdf = min(1.0f, diff / mu);
-                vec4 data = vs(pix);
-                float weightedDistance = (data.y * data.x + sdf) / (data.y + 1);
-                //float weightedDistance = (data.y * data.x + diff) / (data.y + 1);
+        if (diff > -mu)
+        {
+            //if ((diff) < 0.1)
+            //{
+            float sdf = min(1.0f, diff / mu);
+            vec4 data = vs(pix);
+            float weightedDistance = (data.y * data.x + sdf) / (data.y + 1);
+            //float weightedDistance = (data.y * data.x + diff) / (data.y + 1);
 
-                //if (weightedDistance < 0.1f)
-                //{
-                    data.x = clamp(weightedDistance, -1.0f, 1.0f);
-                    // data.x = diff;
-                    data.y = min(data.y + 1, maxWeight);
-                //}
-                //else
-               // {
-                //    data.x = 0;
-                //    data.y = 0;
-                //}
-  
-                set(pix, data);
+            if (weightedDistance < 0.2f)
+            {
+                data.x = clamp(weightedDistance, -0.1f, 0.2f);
+                // data.x = diff;
+                data.y = min(data.y + 1, maxWeight);
             }
             else
             {
-                vec4 data;// = vs(pix);
-
                 data.x = 0;
-                //// data.x = diff;
-
                 data.y = 0;
-
-                set(pix, data);
             }
+
+            set(pix, data);
+        }
+        else
+        {
+            vec4 data;// = vs(pix);
+
+            data.x = 0;
+            //// data.x = diff;
+
+            data.y = 0;
+
+            set(pix, data);
+        }
+
+        ////////////////float diff = (depth.x - cameraX.z) * sqrt(1 + pow(pos.x / pos.z, 2) + pow(pos.y / pos.z, 2));
+        //////////////////if (abs(diff) < 0.1f)
+        ////////////////    if (diff > -mu)
+        ////////////////    {
+        ////////////////        //if ((diff) < 0.1)
+        ////////////////        //{
+        ////////////////        float sdf = min(1.0f, diff / mu);
+        ////////////////        vec4 data = vs(pix);
+        ////////////////        float weightedDistance = (data.y * data.x + sdf) / (data.y + 1);
+        ////////////////        //float weightedDistance = (data.y * data.x + diff) / (data.y + 1);
+
+        ////////////////        //if (weightedDistance < 0.1f)
+        ////////////////        //{
+        ////////////////            data.x = clamp(weightedDistance, -1.0f, 1.0f);
+        ////////////////            // data.x = diff;
+        ////////////////            data.y = min(data.y + 1, maxWeight);
+        ////////////////        //}
+        ////////////////        //else
+        ////////////////       // {
+        ////////////////        //    data.x = 0;
+        ////////////////        //    data.y = 0;
+        ////////////////        //}
+
+        ////////////////        set(pix, data);
+        ////////////////    }
+        ////////////////    else
+        ////////////////    {
+        ////////////////        vec4 data;// = vs(pix);
+
+        ////////////////        data.x = 0;
+        ////////////////        //// data.x = diff;
+
+        ////////////////        data.y = 0;
+
+        ////////////////        set(pix, data);
+        ////////////////    }
         //}
         //else
         //{

@@ -496,6 +496,7 @@ void setUI()
 
 			mcubes.generateMarchingCubes();
 			mcubes.exportMesh();
+			mcubes.exportPointCloud();
 
 		}
 

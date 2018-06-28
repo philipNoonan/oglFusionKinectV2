@@ -388,7 +388,7 @@ void MCubes::histoPyramids()
 
 }
 
-void MCubes::exportMesh()
+void MCubes::exportPointCloud()
 {
 	std::vector<float> posData(m_totalSum * 4);
 
@@ -426,6 +426,87 @@ void MCubes::exportMesh()
 	}
 }
 
+void MCubes::exportMesh()
+{
+	std::cout << "EXPORTING IS ONLY CURRENTLY PROPERLY SUPPORTED FOR POWER OF 2 DIMENSIONS" << std::endl;
+	std::vector<float> posData(m_totalSum * 4);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferPos);
+	void *ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+	memcpy_s(posData.data(), posData.size() * sizeof(float), ptr, posData.size() * sizeof(float));
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+	std::string modelFileName = "data/meshes/marchingCubesBin.stl";
+
+
+	std::ofstream outFile(modelFileName, std::ios::out | std::ios::binary);
+
+	if (!outFile)
+	{
+		//cerr << "Error opening output file: " << FileName << "!" << endl;
+		printf("Error opening output file: %s!\n", modelFileName);
+		exit(1);
+	}
+
+	char hdr[80];
+
+	uint32_t NumTri = posData.size() / 3;
+	uint16_t attributeByteCount = 0;
+
+	outFile.write(hdr, 80);
+	outFile.write((char*)&NumTri, sizeof(uint32_t));
+
+	// h_data is the posVbo, i.e. the array of verts of length maxVerts, sparse
+	// h_compVoxelArray is 
+	// h_voxelVerts is the number of verts in each voxel, i.e. an array of length volume height * width * depth with ints inside saying how many verts are inside each voxel. should this be 1 if one vox only contains one vert
+	std::vector<float> testNorm(3, 1.0f);
+
+	for (int i = 0; i < posData.size(); i += 12) // += 3 because every three points in pos are already a triple from vertex thingy
+	{
+
+		/*outFile.write((char*)&posData[index + j].x, sizeof(float));
+		outFile.write((char*)&posData[index + j].y, sizeof(float));
+		outFile.write((char*)&posData[index + j].z, sizeof(float));*/
+		outFile.write((char*)&testNorm[0], sizeof(float));
+		outFile.write((char*)&testNorm[1], sizeof(float));
+		outFile.write((char*)&testNorm[2], sizeof(float));
+
+		outFile.write((char*)&posData[i + 0], sizeof(float));
+		outFile.write((char*)&posData[i + 1], sizeof(float));
+		outFile.write((char*)&posData[i + 2], sizeof(float));
+
+		outFile.write((char*)&posData[i + 4], sizeof(float));
+		outFile.write((char*)&posData[i + 5], sizeof(float));
+		outFile.write((char*)&posData[i + 6], sizeof(float));
+
+		outFile.write((char*)&posData[i + 8], sizeof(float));
+		outFile.write((char*)&posData[i + 9], sizeof(float));
+		outFile.write((char*)&posData[i + 10], sizeof(float));
+
+		outFile.write((char*)&attributeByteCount, sizeof(uint16_t));
+
+	}
+
+	outFile.close();
+
+	//outFile << "solid STL made from Phils Cuda Marching Cubes" << std::endl;
+
+	//for (int i = 0; i < posData.size(); i+=12) // total verts should be les than maxverts,
+	//{
+	//	outFile << "facet normal " << 1.0 << " " << 1.0 << " " << 1.0 << std::endl;
+	//	outFile << "outer loop" << std::endl;
+	//	outFile << "vertex " << posData[i + 0] / 1000.0f << " " << posData[i + 1] / 1000.0f << " " << posData[i + 2] / 1000.0f << std::endl;
+	//	outFile << "vertex " << posData[i + 4] / 1000.0f << " " << posData[i + 5] / 1000.0f << " " << posData[i + 6] / 1000.0f << std::endl;
+	//	outFile << "vertex " << posData[i + 8] / 1000.0f << " " << posData[i + 9] / 1000.0f << " " << posData[i + 10] / 1000.0f << std::endl;
+	//	outFile << "endloop" << std::endl;
+	//	outFile << "endfacet" << std::endl;
+
+	//}
+	//outFile << "endsolid STL made from Phils Cuda Marching Cubes" << std::endl;
+
+	//outFile.close();
+
+}
 
 void MCubes::generateMarchingCubes()
 {

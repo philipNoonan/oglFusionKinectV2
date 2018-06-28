@@ -75,7 +75,7 @@ public:
 		return m_totalSum;
 	}
 	void exportMesh();
-
+	void exportPointCloud();
 
 private:
 	GLSLProgram marchingCubesProg;
