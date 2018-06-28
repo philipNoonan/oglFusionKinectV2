@@ -202,8 +202,8 @@ void Freenect2Camera::captureLoop()
 
 
 	//pipeline = new libfreenect2::CpuPacketPipeline();
-	//pipeline = new libfreenect2::OpenGLPacketPipeline();
-	pipeline = new libfreenect2::OpenCLPacketPipeline(0);
+	pipeline = new libfreenect2::OpenGLPacketPipeline();
+	//pipeline = new libfreenect2::OpenCLPacketPipeline(0);
 	//pipeline = new libfreenect2::CudaPacketPipeline(0);
 
 
