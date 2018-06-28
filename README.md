@@ -28,7 +28,7 @@ Go to your vcpkg.exe installed location and open another command prompt.
 Then we install the various libraries needed for this project.
 
 ```
-vcpkg install glew glfw3 glm imgui eigen3 tinyxml2 nlohmann-json dirent
+vcpkg install glew glfw3 glm imgui eigen3 tinyxml2 nlohmann-json
 ```
 This should take 2-3 minutes.
 
