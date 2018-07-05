@@ -31,7 +31,8 @@ subroutine(getColor)
 vec4 fromDepth()
 {
 	vec4 tColor = texture(currentTextureDepth, vec2(TexCoord));
-	return vec4(tColor.x / 5000.0f, tColor.x / 5000.0f, tColor.x / 5000.0f, 1.0f);
+    float valueColor = smoothstep(0.1, 0.5, tColor.x / 1000.0f);
+	return vec4(valueColor.xxx, 1.0f);
 }
 
 subroutine(getColor)

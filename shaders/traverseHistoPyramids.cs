@@ -31,7 +31,7 @@ layout(std430, binding = 0) buffer posBuf
 
 // uniforms
 uniform int baseLevel;
-uniform float isoValue = 1000.0f;
+uniform float isoValue;
 uniform uint totalSum;
 uniform int volumeType = 1;
 
