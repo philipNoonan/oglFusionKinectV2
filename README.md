@@ -19,7 +19,7 @@ These commands may take a few seconds to execute.
 
 ```
 setx VCPKG_DEFAULT_TRIPLET "x64-windows" /m
-setx VCPKG_DIR "C:\vcpkg" /m
+setx VCPKG_ROOT "C:\vcpkg" /m
 ```
 Close the Admin Command Prompt window to flush the newly set variables.
 
