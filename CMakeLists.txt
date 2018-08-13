@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 3.9)
 # Toolchain file needs to be set before project() 
-# set(CMAKE_TOOLCHAIN_FILE "C:/Code/vcpkg/scripts/buildsystems/vcpkg.cmake")
-set(CMAKE_TOOLCHAIN_FILE "" CACHE FILEPATH "this file -> /scripts/buildsystems/vcpkg.cmake")
-if (EXISTS ${CMAKE_TOOLCHAIN_FILE})
-	message( STATUS "vcpkg cmake file found")
-else()
-	message( FATAL_ERROR "vcpkg cmake file not found")
+
+### FIND VCPKG
+if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      CACHE STRING "")
 endif()
 
 project(oglFusionNM)
