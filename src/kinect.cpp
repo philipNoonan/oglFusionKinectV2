@@ -381,7 +381,12 @@ void setUI()
 			if (cameraRunning == false)
 			{
 				cameraRunning = true;
-				
+
+				std::string calFile("resources/infrared.xml");
+
+				loadCalibration(calFile);
+				defaultCalibration = false;
+
 				if (defaultCalibration)
 					std::cout << "Default Calibration Used" << std::endl;
 				startKinect();

@@ -21,7 +21,8 @@ file(WRITE ${SOURCE_PATH}/examples/CMakeLists.txt "${EXAMPLECMAKE}")
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}
     OPTIONS
-        -DENABLE_CUDA=OFF
+        -DENABLE_CUDA=ON
+		-DENABLE_OPENCL=ON
 )
 
 vcpkg_install_cmake()
