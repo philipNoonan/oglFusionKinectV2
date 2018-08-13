@@ -19,7 +19,7 @@ These commands may take a few seconds to execute.
 
 ```
 setx VCPKG_DEFAULT_TRIPLET "x64-windows" /m
-setx VCPKG_DIR "C:\vcpkg" /m
+setx VCPKG_ROOT "C:\vcpkg" /m
 ```
 Close the Admin Command Prompt window to flush the newly set variables.
 
@@ -28,17 +28,23 @@ Go to your vcpkg.exe installed location and open another command prompt.
 Then we install the various libraries needed for this project.
 
 ```
-vcpkg install glew glfw3 glm imgui eigen3 tinyxml2 nlohmann-json dirent
+vcpkg install glew glfw3 glm libjpeg-turbo imgui eigen3 tinyxml2 nlohmann-json dirent
 ```
 This should take 2-3 minutes.
 
 The libfreenect2 version in vcpkg is old, and needs updating. Also it doesnt have simple support for near mode. So we use our forked version of <a href="https://github.com/philipNoonan/libfreenect2">Libfreenect2</a>.
 
-To install this via vcpkg, copy the libfreenect2-nm folder in "./depends/" to your "./vcpkg/ports/" directory. 
+First, pull the latest version of oglFusion
+
+```
+git clone https://github.com/philipNoonan/oglFusionKinectV2
+```
+
+To install the forked version of libfreenect2 via vcpkg, copy the libfreenect2-nm folder in ".oglFusionKinectV2/depends/" to your "./vcpkg/ports/" directory. 
 
 Also, copy ands replace the libusb folder in "./depends/" to your "./vcpkg/ports/" directory.
 
-Then you can install via vcpkg
+Then you can install libusb and libfreenect2-nm via vcpkg
 
 ```
 vcpkg install libusb libfreenect2-nm
@@ -66,12 +72,6 @@ vcpkg install libusb libfreenect2-nm
 We use <a href="https://www.visualstudio.com/downloads/">visual studio 2017</a> since it is the most readily available MSVC these days, support for c++17 features, and the hope that it will be useable with cuda 9.2.
 
 We use <a href="https://cmake.org/download/">cmake</a> . Please use the latest version available.
-
-Pull the latest version of oglFusion
-
-```
-git clone https://github.com/philipNoonan/oglFusionKinectV2
-```
 
 Open CMake and set the source directory as "PATH_TO_YOUR_VERSION/oglFusionKinectV2/" and the build directory as "PATH_TO_YOUR_VERSION/oglFusionKinectV2/build"
 

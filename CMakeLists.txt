@@ -44,6 +44,7 @@ find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
 find_package(eigen3 REQUIRED)
 find_package(tinyxml2 REQUIRED)
+find_package(JPEG REQUIRED)
 
 # Header only
 find_path(NLOHMANN_INCLUDE_DIR nlohmann/json.hpp)
@@ -139,7 +140,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC "graphics")
 #target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${freenect2_INCLUDE_DIRS})
-
+target_include_directories(${PROJECT_NAME} PUBLIC ${JPEG_INCLUDE_DIR})
 
 if (WIN32)
 	target_link_libraries(${PROJECT_NAME} debug ${freenect2_DEBUG_LIBRARY})
@@ -156,6 +157,7 @@ target_link_libraries(${PROJECT_NAME} glm)
 target_link_libraries(${PROJECT_NAME} imgui::imgui)
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 target_link_libraries(${PROJECT_NAME} tinyxml2)
+target_link_libraries(${PROJECT_NAME} ${JPEG_LIBRARIES})
 
 #Header only
 include_directories(${NLOHMANN_INCLUDE_DIR})
