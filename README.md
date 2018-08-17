@@ -8,7 +8,7 @@ An openGL GLSL implementation of KinectFusion for the Kinect v2
 
 <h3>Dependencies</h2>
 
-Although not explicitly used, we have found that having CUDA installed can make the installation process easier. If you are installing CUDA 9.2 you may need to edit the file C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include\crt\host_config.h on libe 131 to "< MSVC 1919" from "< MSVC 1913" 
+Although not explicitly used, we have found that having CUDA installed can make the installation process easier. If you are installing CUDA 9.2 you may need to edit the file C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include\crt\host_config.h on line 131 to "< MSVC 1919" from "< MSVC 1913" 
 
 We use vcpkg to install dependencies. Get vcpkg from the link and follow its installation instructions.
 
